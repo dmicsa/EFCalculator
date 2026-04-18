@@ -1532,8 +1532,18 @@ svg.transition-svg {
   pointer-events: none;
 }
 
+.chart-reticle.is-hidden {
+  opacity: 0;
+}
+
 .chart-reference-line {
   pointer-events: none;
+}
+
+.chart-best-cal-line {
+  stroke: rgba(8, 188, 214, 0.92);
+  stroke-width: 2.2;
+  stroke-dasharray: 8 6;
 }
 
 .chart-max-sharpe-line {
@@ -1582,6 +1592,10 @@ body[data-theme="dark"] .chart-reticle {
 
 body[data-theme="dark"] .chart-max-sharpe-line {
   stroke: rgba(251, 191, 36, 0.88);
+}
+
+body[data-theme="dark"] .chart-best-cal-line {
+  stroke: rgba(103, 232, 249, 0.92);
 }
 
 body[data-theme="dark"] .transition-heading span {

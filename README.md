@@ -1,12 +1,12 @@
-# ETF Efficient Frontier Calculator
+# ETFEfficientFrontier
 
-![ETF Efficient Frontier Calculator splash image](Code/EfficientFrontier-splash.png)
+![ETFEfficientFrontier splash image](Code/ETFEfficientFrontier-splash.png)
 
-If you do not want to generate your own copy, download `EfficientFrontier.html` and open it locally in your browser, or use [this link](https://htmlpreview.github.io/?https://github.com/dmicsa/EFCalculator/blob/main/EfficientFrontier.html).
+If you do not want to generate your own copy, download `ETFEfficientFrontier.html` and open it locally in your browser, or use [this link](https://htmlpreview.github.io/?https://github.com/dmicsa/EFCalculator/blob/main/ETFEfficientFrontier.html).
 
 This repository generates a static ETF efficient frontier explorer from the Nasdaq ETF universe.
 
-The generator code lives in `Code\GenerateEfficientFrontier.ts`. The main output, `EfficientFrontier.html`, embeds the filtered ETF dataset together with the page styles and browser logic, so the generated file opens locally without additional assets.
+The generator code lives in `Code\GenerateETFEfficientFrontier.ts`. The main output, `ETFEfficientFrontier.html`, embeds the filtered ETF dataset together with the page styles and browser logic, so the generated file opens locally without additional assets.
 
 ## Prerequisites
 
@@ -22,22 +22,22 @@ In this workspace, the package can still emit a stale "found 1.40.3" warning eve
 From the repository root, run:
 
 ```powershell
-.\GenerateEfficientFrontier.bat
+.\GenerateETFEfficientFrontier.bat
 ```
 
-That writes `EfficientFrontier.html` in the repository root. Open `EfficientFrontier.html` directly in a browser.
+That writes `ETFEfficientFrontier.html` in the repository root. Open `ETFEfficientFrontier.html` directly in a browser.
 
 ## Raw Deno Command
 
 If you want to run the generator without the batch wrapper:
 
 ```powershell
-deno run -A .\Code\GenerateEfficientFrontier.ts
+deno run -A .\Code\GenerateETFEfficientFrontier.ts
 ```
 
 The generator now writes to these root-level files by default:
 
-- `EfficientFrontier.html`
+- `ETFEfficientFrontier.html`
 - `Code\cache.json`
 
 ## Command-Line Options
@@ -48,13 +48,13 @@ The generator now writes to these root-level files by default:
 
 ## Files In This Repo
 
-- `Code\GenerateEfficientFrontier.ts`: the generator script
+- `Code\GenerateETFEfficientFrontier.ts`: the generator script
 - `Code\frontier-app.js`: source of the browser-side optimization and interaction logic that is inlined into the generated HTML
 - `Code\frontier-theme.css`: source of the page and chart styling that is inlined into the generated HTML
 - `Code\Info.md`: the visible name/copyright line used in the first hero box and browser title
-- `Code\EfficientFrontier-splash.png`: combined splash image shown at the top of this README
-- `GenerateEfficientFrontier.bat`: root wrapper for generating the calculator
-- `EfficientFrontier.html`: current generated frontier page, standalone for local viewing
+- `Code\ETFEfficientFrontier-splash.png`: combined splash image shown at the top of this README
+- `GenerateETFEfficientFrontier.bat`: root wrapper for generating the calculator
+- `ETFEfficientFrontier.html`: current generated frontier page, standalone for local viewing
 - `Code\cache.json`: cached enrichment results
 
 ## What The Generated Page Contains
@@ -65,7 +65,7 @@ The generated page is a standalone static local HTML app with embedded ETF data 
 - a ticker subset box that accepts mixed separators, removes duplicates, and supports optional expected-return overrides beside each ticker
 - a valid-ticker CSV list in the first hero box that reflects the final creation-time filtered universe
 - a long-only capped-weight efficient frontier rebuilt in the browser from embedded monthly returns
-- an aligned transition map under the frontier chart, with synchronized hover reticles and a Max Sharpe reference line
+- an aligned transition map under the frontier chart, with synchronized hover reticles, a Max Sharpe reference line, and the best possible CAL line
 - a selected-universe expected-return editor, plus rounded holdings and ticker/weight pair export
 - a delayed busy cursor and centered `Calculating...` box when calculations take longer than 0.5 seconds
 
@@ -86,7 +86,7 @@ Clearing the ticker subset field switches the optimizer back to the broader filt
 - If the script fails early, check your Deno version with `deno --version`
 - If `yahoo-finance2` prints an "Unsupported environment" warning that mentions Deno 1.40.3, verify the real runtime first; that warning can be stale even on Deno 2.x
 - If the frontier is unavailable, relax the constraints or expand the ticker subset so the max-weight cap can produce a feasible portfolio set
-- If you run the raw Deno command from outside the repository root, relative paths resolve from your current working directory; `GenerateEfficientFrontier.bat` avoids that by switching to the repo root first
+- If you run the raw Deno command from outside the repository root, relative paths resolve from your current working directory; `GenerateETFEfficientFrontier.bat` avoids that by switching to the repo root first
 
 ## Copyright And Permission
 

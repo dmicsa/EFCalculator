@@ -968,7 +968,7 @@ function renderChart(analysis, selectedIndex) {
     return;
   }
 
-  const width = 820;
+  const width = 1025;
   const frontierHeight = 450;
   const transitionHeight = 372;
   const frontierPadding = { top: 18, right: 24, bottom: 44, left: 62 };
@@ -982,11 +982,12 @@ function renderChart(analysis, selectedIndex) {
   const xPad = Math.max((xMax - xMin) * 0.12, 0.01);
   const yPad = Math.max((yMax - yMin) * 0.16, 0.01);
   const volatilityAxis = buildPercentAxis(Math.max(0, xMin - xPad), xMax + xPad);
+  const returnAxis = buildPercentAxis(Math.max(0, Math.min(yMin - yPad, analysis.stats.riskFreeRate)), yMax + yPad, 6);
   const chartBounds = {
     xMin: volatilityAxis.min,
     xMax: volatilityAxis.max,
-    yMin: Math.max(0, yMin - yPad),
-    yMax: yMax + yPad,
+    yMin: returnAxis.min,
+    yMax: returnAxis.max,
   };
 
   const scaleX = (value) => {
@@ -1011,7 +1012,7 @@ function renderChart(analysis, selectedIndex) {
     return `${prefix} ${scaleX(point.volatility).toFixed(2)} ${scaleY(point.expectedReturn).toFixed(2)}`;
   }).join(" ");
 
-  const yTicks = buildTicks(chartBounds.yMin, chartBounds.yMax, 5);
+  const yTicks = returnAxis.ticks;
   const xTicks = volatilityAxis.ticks;
   const selectedPoint = analysis.frontier[selectedIndex];
   const maxSharpePoint = analysis.maxSharpeIndex >= 0 ? analysis.frontier[analysis.maxSharpeIndex] : null;
@@ -1020,6 +1021,10 @@ function renderChart(analysis, selectedIndex) {
     ? `${formatPeriodLabel(analysis.stats.startPeriod)} - ${formatPeriodLabel(analysis.stats.endPeriod)}`
     : "Displayed frontier points";
   const maxSharpeX = maxSharpePoint ? scaleX(maxSharpePoint.volatility) : null;
+  const bestCalLine = maxSharpePoint && Number.isFinite(analysis.stats.riskFreeRate)
+    ? buildCapitalAllocationLineSegment(chartBounds, analysis.stats.riskFreeRate, maxSharpePoint)
+    : null;
+  const shouldHideSelectedReticle = selectedIndex === analysis.maxSharpeIndex;
 
   const chartMetrics = [
     { label: "Selected return", value: formatPercent(selectedPoint.expectedReturn) },
@@ -1035,7 +1040,7 @@ function renderChart(analysis, selectedIndex) {
     `<svg class="frontier-svg" viewBox="0 0 ${width} ${frontierHeight}" role="img" aria-label="Efficient frontier chart">`,
     ...yTicks.map((tick) => {
       const y = scaleY(tick);
-      return `<g><line class="grid-line" x1="${frontierPadding.left}" y1="${y}" x2="${width - frontierPadding.right}" y2="${y}"></line><text class="tick-label" x="${frontierPadding.left - 10}" y="${y + 4}" text-anchor="end">${escapeHtml(formatPercent(tick))}</text></g>`;
+      return `<g><line class="grid-line" x1="${frontierPadding.left}" y1="${y}" x2="${width - frontierPadding.right}" y2="${y}"></line><text class="tick-label" x="${frontierPadding.left - 10}" y="${y + 4}" text-anchor="end">${escapeHtml(formatPercent(tick, 0))}</text></g>`;
     }),
     ...xTicks.map((tick) => {
       const x = scaleX(tick);
@@ -1043,10 +1048,13 @@ function renderChart(analysis, selectedIndex) {
     }),
     `<line class="axis-line" x1="${frontierPadding.left}" y1="${frontierHeight - frontierPadding.bottom}" x2="${width - frontierPadding.right}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
     `<line class="axis-line" x1="${frontierPadding.left}" y1="${frontierPadding.top}" x2="${frontierPadding.left}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
+    bestCalLine
+      ? `<line class="chart-reference-line chart-best-cal-line" x1="${scaleX(bestCalLine.start.x)}" y1="${scaleY(bestCalLine.start.y)}" x2="${scaleX(bestCalLine.end.x)}" y2="${scaleY(bestCalLine.end.y)}"></line>`
+      : "",
     maxSharpeX !== null
       ? `<line class="chart-reference-line chart-max-sharpe-line" x1="${maxSharpeX}" y1="${frontierPadding.top}" x2="${maxSharpeX}" y2="${frontierHeight - frontierPadding.bottom}"></line>`
       : "",
-    `<line class="chart-reticle" data-reticle="frontier" x1="${defaultReticleX}" y1="${frontierPadding.top}" x2="${defaultReticleX}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
+    `<line class="chart-reticle${shouldHideSelectedReticle ? " is-hidden" : ""}" data-reticle="frontier" x1="${defaultReticleX}" y1="${frontierPadding.top}" x2="${defaultReticleX}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
     `<path class="frontier-line" d="${path}"></path>`,
     ...analysis.frontier.map((point, index) => {
       const classes = ["frontier-point"];
@@ -1077,7 +1085,7 @@ function renderChart(analysis, selectedIndex) {
     `<svg class="transition-svg" viewBox="0 0 ${width} ${transitionHeight}" role="img" aria-label="Efficient frontier transition map">`,
     ...transitionTicks.map((tick) => {
       const y = scaleAllocationY(tick);
-      return `<g><line class="grid-line" x1="${transitionPadding.left}" y1="${y}" x2="${width - transitionPadding.right}" y2="${y}"></line><text class="tick-label" x="${transitionPadding.left - 10}" y="${y + 4}" text-anchor="end">${escapeHtml(formatPercent(tick))}</text></g>`;
+      return `<g><line class="grid-line" x1="${transitionPadding.left}" y1="${y}" x2="${width - transitionPadding.right}" y2="${y}"></line><text class="tick-label" x="${transitionPadding.left - 10}" y="${y + 4}" text-anchor="end">${escapeHtml(formatPercent(tick, 0))}</text></g>`;
     }),
     ...xTicks.map((tick) => {
       const x = scaleX(tick);
@@ -1119,6 +1127,7 @@ function bindChartInteractions(analysis, pointXs, selectedIndex) {
     elements.chartStage.querySelectorAll("[data-reticle]").forEach((line) => {
       line.setAttribute("x1", String(x));
       line.setAttribute("x2", String(x));
+      line.classList.toggle("is-hidden", safeIndex === analysis.maxSharpeIndex);
     });
     elements.chartStage.querySelectorAll("[data-frontier-index]").forEach((node) => {
       const nodeIndex = Number(node.getAttribute("data-frontier-index"));
@@ -2078,4 +2087,57 @@ function serializeTickerEntries(entries) {
     }
     return `${entry.symbol} ${formatExplicitEditorPercent(entry.expectedReturnPercent)}`;
   }).join("\n");
+}
+
+function buildCapitalAllocationLineSegment(bounds, intercept, maxSharpePoint) {
+  if (!Number.isFinite(intercept) || !maxSharpePoint || !Number.isFinite(maxSharpePoint.volatility) || !Number.isFinite(maxSharpePoint.expectedReturn)) {
+    return null;
+  }
+
+  const deltaVolatility = maxSharpePoint.volatility;
+  const deltaReturn = maxSharpePoint.expectedReturn - intercept;
+  if (!Number.isFinite(deltaVolatility) || deltaVolatility <= 0 || !Number.isFinite(deltaReturn) || deltaReturn <= 0) {
+    return null;
+  }
+
+  const slope = deltaReturn / deltaVolatility;
+  const start = {
+    x: bounds.xMin,
+    y: intercept + slope * bounds.xMin,
+  };
+  if (start.y < bounds.yMin - 1e-9 || start.y > bounds.yMax + 1e-9) {
+    return null;
+  }
+
+  const candidates = [];
+  const addPoint = (x, y) => {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      return;
+    }
+    if (x < bounds.xMin - 1e-9 || x > bounds.xMax + 1e-9 || y < bounds.yMin - 1e-9 || y > bounds.yMax + 1e-9) {
+      return;
+    }
+    const point = {
+      x: Number(x.toFixed(8)),
+      y: Number(y.toFixed(8)),
+    };
+    if (candidates.some((candidate) => Math.abs(candidate.x - point.x) < 1e-8 && Math.abs(candidate.y - point.y) < 1e-8)) {
+      return;
+    }
+    candidates.push(point);
+  };
+
+  addPoint(bounds.xMax, intercept + slope * bounds.xMax);
+  addPoint((bounds.yMin - intercept) / slope, bounds.yMin);
+  addPoint((bounds.yMax - intercept) / slope, bounds.yMax);
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  candidates.sort((left, right) => left.x - right.x || left.y - right.y);
+  return {
+    start,
+    end: candidates[candidates.length - 1],
+  };
 }
