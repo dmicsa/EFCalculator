@@ -2,13 +2,11 @@
 
 ![ETF Efficient Frontier Calculator splash image](Code/EfficientFrontier-splash.png)
 
-If you do not want to generate your own copy, just download `EfficientFrontier.html` together with the `Code` folder and open the HTML locally in your browser.
-
-If you do not want to generate your own copy, just download `EFCalculator.html` and open it locally in your browser, or, more simply, use [this link](https://htmlpreview.github.io/?https://github.com/dmicsa/EFCalculator/blob/main/EFCalculator.html).
+If you do not want to generate your own copy, download `EfficientFrontier.html` and open it locally in your browser, or use [this link](https://htmlpreview.github.io/?https://github.com/dmicsa/EFCalculator/blob/main/EfficientFrontier.html).
 
 This repository generates a static ETF efficient frontier explorer from the Nasdaq ETF universe.
 
-The generator code lives in `Code\GenerateEfficientFrontier.ts`. The main output, `EfficientFrontier.html`, embeds the filtered ETF dataset and loads the local browser assets from `Code\frontier-app.js` and `Code\frontier-theme.css`, so keep those files beside the generated HTML.
+The generator code lives in `Code\GenerateEfficientFrontier.ts`. The main output, `EfficientFrontier.html`, embeds the filtered ETF dataset together with the page styles and browser logic, so the generated file opens locally without additional assets.
 
 ## Prerequisites
 
@@ -51,19 +49,17 @@ The generator now writes to these root-level files by default:
 ## Files In This Repo
 
 - `Code\GenerateEfficientFrontier.ts`: the generator script
-- `Code\frontier-app.js`: the browser-side optimization and interaction logic
-- `Code\frontier-theme.css`: the page and chart styling
+- `Code\frontier-app.js`: source of the browser-side optimization and interaction logic that is inlined into the generated HTML
+- `Code\frontier-theme.css`: source of the page and chart styling that is inlined into the generated HTML
 - `Code\Info.md`: the visible name/copyright line used in the first hero box and browser title
 - `Code\EfficientFrontier-splash.png`: combined splash image shown at the top of this README
-- `Code\EfficientFrontier-light.png`: raw light-theme screenshot used for the splash image
-- `Code\EfficientFrontier-dark.png`: raw dark-theme screenshot used for the splash image
 - `GenerateEfficientFrontier.bat`: root wrapper for generating the calculator
-- `EfficientFrontier.html`: current generated frontier page
+- `EfficientFrontier.html`: current generated frontier page, standalone for local viewing
 - `Code\cache.json`: cached enrichment results
 
 ## What The Generated Page Contains
 
-The generated page is a static local HTML app with embedded ETF data and client-side controls. It includes:
+The generated page is a standalone static local HTML app with embedded ETF data and client-side controls. It includes:
 
 - a default basket of `QQQ, TLT, GLD, EUO, SMH, MLPX, SCHD, GRID, XAR, DXJ`
 - a ticker subset box that accepts mixed separators, removes duplicates, and supports optional expected-return overrides beside each ticker

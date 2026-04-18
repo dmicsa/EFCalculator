@@ -322,13 +322,23 @@ function setCalculationBusy(isBusy) {
 
 function waitForNextPaint() {
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timer);
+      resolve();
+    };
+    const timer = window.setTimeout(finish, 50);
+
     if (typeof window.requestAnimationFrame !== "function") {
-      window.setTimeout(resolve, 0);
       return;
     }
 
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(resolve);
+      window.requestAnimationFrame(finish);
     });
   });
 }

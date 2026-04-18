@@ -89,6 +89,8 @@ type CachedAssetData = {
 const OUTPUT_PATH = "./EfficientFrontier.html";
 const CACHE_PATH = "./Code/cache.json";
 const INFO_PATH = "./Code/Info.md";
+const THEME_PATH = "./Code/frontier-theme.css";
+const APP_PATH = "./Code/frontier-app.js";
 const CACHE_VERSION = 1;
 const NASDAQ_ETF_SCREENER_URL = "https://api.nasdaq.com/api/screener/etf?download=true";
 const QUOTE_BATCH_SIZE = 100;
@@ -145,7 +147,11 @@ const yahooFinance = new YahooFinance();
 
 async function main() {
   const options = parseArgs(Deno.args);
-  const infoText = await readInfoText(INFO_PATH);
+  const [infoText, themeCssText, appJsText] = await Promise.all([
+    readInfoText(INFO_PATH),
+    Deno.readTextFile(THEME_PATH),
+    Deno.readTextFile(APP_PATH),
+  ]);
   const cache = await readCache(options.cachePath);
   const fullUniverse = await fetchNasdaqUniverse();
   const selectedUniverse = fullUniverse.filter((entry) => {
@@ -206,6 +212,8 @@ async function main() {
   const html = renderHtml({
     rows,
     infoText,
+    themeCssText,
+    appJsText,
     generatedAt,
     rawUniverseCount: fullUniverse.length,
     enrichedCount: preparedRows.length,
@@ -973,11 +981,13 @@ function escapeHtml(value: string): string {
 function renderHtml(input: {
   rows: PreparedEtfRow[];
   infoText: string;
+  themeCssText: string;
+  appJsText: string;
   generatedAt: string;
   rawUniverseCount: number;
   enrichedCount: number;
 }): string {
-  const { rows, infoText, generatedAt, rawUniverseCount, enrichedCount } = input;
+  const { rows, infoText, themeCssText, appJsText, generatedAt, rawUniverseCount, enrichedCount } = input;
   const jsonRows = JSON.stringify(rows).replace(/</g, "\\u003c");
   const metaJson = JSON.stringify({
     rawUniverseCount,
@@ -987,6 +997,8 @@ function renderHtml(input: {
   }).replace(/</g, "\\u003c");
   const heroTitle = renderInfoText(infoText);
   const documentTitle = escapeHtml(extractDocumentTitle(infoText));
+  const inlineThemeCss = escapeInlineTagText(themeCssText, "style");
+  const inlineAppJs = escapeInlineTagText(appJsText, "script");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -995,7 +1007,9 @@ function renderHtml(input: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="darkreader-lock">
   <title>${documentTitle}</title>
-  <link rel="stylesheet" href="./Code/frontier-theme.css">
+  <style>
+${inlineThemeCss}
+  </style>
 </head>
 <body>
   <div class="page">
@@ -1212,9 +1226,15 @@ function renderHtml(input: {
     window.__FRONTIER_DATA__ = ${jsonRows};
     window.__FRONTIER_META__ = ${metaJson};
   </script>
-  <script src="./Code/frontier-app.js"></script>
+  <script>
+${inlineAppJs}
+  </script>
 </body>
 </html>`;
+}
+
+function escapeInlineTagText(value: string, tagName: "script" | "style"): string {
+  return value.replace(new RegExp(`</${tagName}`, "gi"), `<\\/${tagName}`);
 }
 
 await main();
