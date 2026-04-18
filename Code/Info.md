@@ -1,1 +1,1 @@
-ETF Efficient Frontier Calculator, V1.1, (c) 2026 Dan Micsa, PhD,
+ETF Efficient Frontier Calculator, V1.1, (c) 2026 Dan Micsa, PhD, [Check the latest version here.](https://github.com/dmicsa/EFCalculator)

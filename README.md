@@ -1,10 +1,10 @@
 # ETF Efficient Frontier Calculator
 
-| Light theme | Dark theme |
-| --- | --- |
-| ![ETF Efficient Frontier Calculator light theme](Code/EfficientFrontier-light.png) | ![ETF Efficient Frontier Calculator dark theme](Code/EfficientFrontier-dark.png) |
+![ETF Efficient Frontier Calculator splash image](Code/EfficientFrontier-splash.png)
 
 If you do not want to generate your own copy, just download `EfficientFrontier.html` together with the `Code` folder and open the HTML locally in your browser.
+
+If you do not want to generate your own copy, just download `EFCalculator.html` and open it locally in your browser, or, more simply, use [this link](https://htmlpreview.github.io/?https://github.com/dmicsa/EFCalculator/blob/main/EFCalculator.html).
 
 This repository generates a static ETF efficient frontier explorer from the Nasdaq ETF universe.
 
@@ -54,8 +54,9 @@ The generator now writes to these root-level files by default:
 - `Code\frontier-app.js`: the browser-side optimization and interaction logic
 - `Code\frontier-theme.css`: the page and chart styling
 - `Code\Info.md`: the visible name/copyright line used in the first hero box and browser title
-- `Code\EfficientFrontier-light.png`: raw light-theme screenshot shown at the top of this README
-- `Code\EfficientFrontier-dark.png`: raw dark-theme screenshot shown at the top of this README
+- `Code\EfficientFrontier-splash.png`: combined splash image shown at the top of this README
+- `Code\EfficientFrontier-light.png`: raw light-theme screenshot used for the splash image
+- `Code\EfficientFrontier-dark.png`: raw dark-theme screenshot used for the splash image
 - `GenerateEfficientFrontier.bat`: root wrapper for generating the calculator
 - `EfficientFrontier.html`: current generated frontier page
 - `Code\cache.json`: cached enrichment results

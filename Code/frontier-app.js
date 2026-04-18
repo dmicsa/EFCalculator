@@ -971,9 +971,10 @@ function renderChart(analysis, selectedIndex) {
   const yMax = Math.max(...yValues);
   const xPad = Math.max((xMax - xMin) * 0.12, 0.01);
   const yPad = Math.max((yMax - yMin) * 0.16, 0.01);
+  const volatilityAxis = buildPercentAxis(Math.max(0, xMin - xPad), xMax + xPad);
   const chartBounds = {
-    xMin: Math.max(0, xMin - xPad),
-    xMax: xMax + xPad,
+    xMin: volatilityAxis.min,
+    xMax: volatilityAxis.max,
     yMin: Math.max(0, yMin - yPad),
     yMax: yMax + yPad,
   };
@@ -1001,7 +1002,7 @@ function renderChart(analysis, selectedIndex) {
   }).join(" ");
 
   const yTicks = buildTicks(chartBounds.yMin, chartBounds.yMax, 5);
-  const xTicks = buildTicks(chartBounds.xMin, chartBounds.xMax, 5);
+  const xTicks = volatilityAxis.ticks;
   const selectedPoint = analysis.frontier[selectedIndex];
   const maxSharpePoint = analysis.maxSharpeIndex >= 0 ? analysis.frontier[analysis.maxSharpeIndex] : null;
   const minVolPoint = analysis.frontier[analysis.minVolIndex];
@@ -1028,7 +1029,7 @@ function renderChart(analysis, selectedIndex) {
     }),
     ...xTicks.map((tick) => {
       const x = scaleX(tick);
-      return `<g><line class="grid-line" x1="${x}" y1="${frontierPadding.top}" x2="${x}" y2="${frontierHeight - frontierPadding.bottom}"></line><text class="tick-label" x="${x}" y="${frontierHeight - frontierPadding.bottom + 18}" text-anchor="middle">${escapeHtml(formatPercent(tick))}</text></g>`;
+      return `<g><line class="grid-line" x1="${x}" y1="${frontierPadding.top}" x2="${x}" y2="${frontierHeight - frontierPadding.bottom}"></line><text class="tick-label" x="${x}" y="${frontierHeight - frontierPadding.bottom + 18}" text-anchor="middle">${escapeHtml(formatPercent(tick, 0))}</text></g>`;
     }),
     `<line class="axis-line" x1="${frontierPadding.left}" y1="${frontierHeight - frontierPadding.bottom}" x2="${width - frontierPadding.right}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
     `<line class="axis-line" x1="${frontierPadding.left}" y1="${frontierPadding.top}" x2="${frontierPadding.left}" y2="${frontierHeight - frontierPadding.bottom}"></line>`,
@@ -1070,7 +1071,7 @@ function renderChart(analysis, selectedIndex) {
     }),
     ...xTicks.map((tick) => {
       const x = scaleX(tick);
-      return `<g><line class="grid-line" x1="${x}" y1="${transitionPadding.top}" x2="${x}" y2="${transitionHeight - transitionPadding.bottom}"></line><text class="tick-label" x="${x}" y="${transitionHeight - transitionPadding.bottom + 18}" text-anchor="middle">${escapeHtml(formatPercent(tick))}</text></g>`;
+      return `<g><line class="grid-line" x1="${x}" y1="${transitionPadding.top}" x2="${x}" y2="${transitionHeight - transitionPadding.bottom}"></line><text class="tick-label" x="${x}" y="${transitionHeight - transitionPadding.bottom + 18}" text-anchor="middle">${escapeHtml(formatPercent(tick, 0))}</text></g>`;
     }),
     `<line class="axis-line" x1="${transitionPadding.left}" y1="${transitionHeight - transitionPadding.bottom}" x2="${width - transitionPadding.right}" y2="${transitionHeight - transitionPadding.bottom}"></line>`,
     `<line class="axis-line" x1="${transitionPadding.left}" y1="${transitionPadding.top}" x2="${transitionPadding.left}" y2="${transitionHeight - transitionPadding.bottom}"></line>`,
@@ -1691,6 +1692,48 @@ function buildTicks(minValue, maxValue, count) {
     ticks.push(minValue + ratio * (maxValue - minValue));
   }
   return ticks;
+}
+
+function buildPercentAxis(minValue, maxValue, maxTickCount = 10) {
+  if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
+    return { min: 0, max: 0.1, ticks: [0, 0.05, 0.1] };
+  }
+
+  const stepPercent = choosePercentTickStep(minValue, maxValue, maxTickCount);
+  const minPercent = Math.max(0, minValue * 100);
+  const maxPercent = Math.max(minPercent, maxValue * 100);
+  const axisMinPercent = Math.floor(minPercent / stepPercent) * stepPercent;
+  let axisMaxPercent = Math.ceil(maxPercent / stepPercent) * stepPercent;
+  if (axisMaxPercent <= axisMinPercent) {
+    axisMaxPercent = axisMinPercent + stepPercent;
+  }
+
+  const ticks = [];
+  for (let tickPercent = axisMinPercent; tickPercent <= axisMaxPercent; tickPercent += stepPercent) {
+    ticks.push(tickPercent / 100);
+  }
+
+  return {
+    min: axisMinPercent / 100,
+    max: axisMaxPercent / 100,
+    ticks,
+  };
+}
+
+function choosePercentTickStep(minValue, maxValue, maxTickCount = 10) {
+  const spanPercent = Math.max(0, (maxValue - minValue) * 100);
+  if (spanPercent <= 0) {
+    return 1;
+  }
+
+  for (const stepPercent of [1, 5, 10]) {
+    if (Math.ceil(spanPercent / stepPercent) + 1 <= maxTickCount) {
+      return stepPercent;
+    }
+  }
+
+  const roughStep = spanPercent / Math.max(2, maxTickCount - 1);
+  return Math.max(10, Math.ceil(roughStep / 10) * 10);
 }
 
 function parseTickerSymbols(rawValue) {
